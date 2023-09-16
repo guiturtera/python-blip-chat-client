@@ -7,6 +7,7 @@ from time import sleep
 
 websocket_uri = '<URL DO SEU WEBSOCKET>'
 bot_id = '<ID DO SEU BOT>'
+# appkey = 'dGVzdG1haW4zOmVhN2U1MDU2LWYwNmQtNDM0MS04Mzg1LWFiYmNmZWU4MjlkMw=='
 
 def send_message(ws, content: dict) -> None:
     str_content = json.dumps(content)
@@ -20,10 +21,13 @@ def receive_message(ws) -> dict:
 
 def wait_response_message(ws) -> dict:
     is_response_message = False
-    while not is_response_message:
+    is_delay_content = True
+    while not is_response_message or is_delay_content:
         res = receive_message(ws)
+        
         is_response_message = (res['metadata'].get('#messageKind') == 'Response')
-                
+        is_delay_content = (type(res.get('content')) is dict and res['content'].get('state') == 'composing')        
+        
     return res
 
 new_user = auth.create_new_user(websocket_uri, bot_id)
@@ -54,22 +58,10 @@ for test_content in messages_to_send:
     
     for i in range(test_content['qtd_respostas']):
         res = wait_response_message(ws)['content']
-        print(f'  - Bot: {res}')
+        print(f'  -Bot: {res}')
     
     sleep(0.5)
         
         
-
-message_id = uuid.uuid4()
-msg_to_send = {"id": f"{message_id}","to": f"{bot_id}@msging.net","type": "text/plain","content": "oi","metadata": {}}
-send_message(ws, msg_to_send)
-receive_message(ws)
-receive_message(ws)
-receive_message(ws)
-receive_message(ws)
-# receive_message(ws)
-# receive_message(ws)
-# receive_message(ws)
-# receive_message(ws)
-# receive_message(ws)
+ws.close()
 
