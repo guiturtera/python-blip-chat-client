@@ -97,6 +97,22 @@ def create_new_user(websocket_uri: str, bot_id: str) -> dict:
         "scheme": "plain"
     }
     
+def authenticate_user_in_websocket(ws: websocket, user: dict, bot_id: str) -> None:
+    _send_message(ws, {'state': 'new'})
+    ws_id = _receive_message(ws)['id']
+
+    msg_to_send = {"id":f"{ws_id}","state":"authenticating","from":f"{user['identity']}.{bot_id}@0mn.io/default","scheme":"plain","authentication":{"scheme":"plain","password":"dGVzdGUxMjM="}}
+    _send_message(ws, msg_to_send)
+    _receive_message(ws)
+    
+    
+    message_id = uuid.uuid4()
+    msg_to_send = {"id":f"{message_id}","method":"set","uri":"/presence","type":"application/vnd.lime.presence+json","resource":{"status":"available","routingRule":"promiscuous","echo":True}}
+    _send_message(ws, msg_to_send)
+    _receive_message(ws)
+    
+    
+    
 
     
 
