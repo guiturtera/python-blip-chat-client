@@ -92,7 +92,7 @@ def create_new_user(websocket_uri: str, bot_id: str) -> dict:
     _configure_user_password(custom_uuid, password, websocket_uri, bot_id)
     
     return {
-        "identity": custom_uuid,
+        "identity": f"{custom_uuid}",
         "password": password,
         "scheme": "plain"
     }
