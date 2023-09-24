@@ -1,5 +1,6 @@
 import uuid
 import json
+from datetime import datetime
 from time import sleep
 
 import websocket
@@ -23,14 +24,24 @@ def receive_message(ws) -> dict:
     received_message = ws.recv()
     return json.loads(received_message)
 
-def wait_response_message(ws) -> dict:
+def wait_response_message(ws, timeout_in_seconds=100) -> dict:
+    start_function = datetime.now()
+
     is_response_message = False
     is_delay_content = True
     while not is_response_message or is_delay_content:
         res = receive_message(ws)
 
-        is_response_message = (res['metadata'].get('#messageKind') == 'Response')
-        is_delay_content = (type(res.get('content')) is dict and res['content'].get('state') == 'composing')        
+        if (datetime.now() - start_function).seconds > timeout_in_seconds:
+            raise TimeoutError(f"Limite de {timeout_in_seconds} para a resposta do usuário excedida")
+
+        ping_message = res.get('uri') and res.get('uri') == '/ping'
+        if ping_message:
+            print(f'{datetime.now().isoformat()} - ping back')
+            send_message(ws, {{"id":f"{res['id']}","method":"get","status":"success","type":"application/vnd.lime.ping+json","resource":{}}})
+        else:
+            is_response_message = (res['metadata'].get('#messageKind') == 'Response')
+            is_delay_content = (type(res.get('content')) is dict and res['content'].get('state') == 'composing')        
 
     return res
 
@@ -44,7 +55,6 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
         'conversation': []
     }
     
-    #### Timeout ainda não implementado
     for message in expected_conversation:
         if message['from'] == 'user':
             msg_to_send = {"id": f"{uuid.uuid4()}","to": f"{bot_id}@msging.net","type": "text/plain","content": f"{message['content']}","metadata": {}}
@@ -53,28 +63,38 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
             
             send_message(ws, msg_to_send)
         elif message['from'] == 'bot':
-            res = wait_response_message(ws)    
-            content = res['content']
+            content = None
+            error = None
+            try:
+                res = wait_response_message(ws, timeout_in_seconds=message['timeout_in_seconds'])
+                content = res['content']
+                print(f'  - Bot: {content}')
+            except TimeoutError:
+                error = 'Bot não respondeu no tempo esperado'
+                print(f'  - FALHA -- bot demorou muito para responder')
             
-            print(f'  - Bot: {content}')
-            success_response = message['must_include'] in content
+            if not error and not message['must_include'] in content:
+                error = 'Mensagem retornada pelo bot não foi a esperada'
+
+            status = 'failed' if error else 'success'
             test_result['conversation'].append({
                 'from': 'bot', 
                 'content': content, 
-                'status': 'success' if success_response else 'failed', 
-                'must_include': message['must_include'], 
-                'timeout_in_seconds': message['timeout_in_seconds']
+                'status': status, 
+                #'must_include': message['must_include'], 
+                #'timeout_in_seconds': message['timeout_in_seconds'],
+                'error': error
             })
-            
-            if not success_response:
-                test_result['status'] = 'failed'
+
+            test_result['status'] = status            
+
+            if status == 'failed':
                 return test_result
         else:
             raise Exception(f'{message["from"]} é inválido para a chave "from". Utilize "user" ou "bot"')
         
         sleep(0.5)
     
-    test_result['status'] = 'success'
     return test_result
         
 
@@ -100,7 +120,7 @@ expected_conversation = [
     {
         "from": "bot",
         "must_include": "Bem demais!",
-        "timeout_in_seconds": 10
+        "timeout_in_seconds": 0.001
     }
 ]
 
