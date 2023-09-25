@@ -3,10 +3,6 @@ import json
 from datetime import datetime
 from time import sleep
 
-import websocket
-
-import auth
-
 
 websocket_uri = 'wss://guilherme-turtera-q4uvy.ws.0mn.io/4'
 bot_id = 'teste3226'
@@ -56,7 +52,7 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
         if message['from'] == 'user':
             msg_to_send = {"id": f"{uuid.uuid4()}","to": f"{bot_id}@msging.net","type": "text/plain","content": f"{message['content']}","metadata": {}}
             print(f"  - [{datetime.now().isoformat()}] User: {message['content']}")
-            test_result['conversation'].append({'from': 'user', 'content': message})
+            test_result['conversation'].append({'from': 'user', 'content': message['content']})
             
             _send_message(ws, msg_to_send)
         elif message['from'] == 'bot':
@@ -81,8 +77,8 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
                 'from': 'bot', 
                 'content': content, 
                 'status': status, 
-                #'must_include': message['must_include'], 
-                #'timeout_in_seconds': message['timeout_in_seconds'],
+                'must_include': message['must_include'], 
+                'timeout_in_seconds': message['timeout_in_seconds'],
                 'error': error
             })
 

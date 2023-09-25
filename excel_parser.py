@@ -67,7 +67,16 @@ def generate_test_cases_from_excel(excel_path: str):
         
     return formatted_test_cases
 
-def generate_simple_test_results(results_path: str, test_results):
+def generate_test_results(results_path: str, test_results):
+    with pd.ExcelWriter(results_path, engine='xlsxwriter') as writer:
+        summary = _generate_simple_test_results(test_results)
+        summary.to_excel(writer, sheet_name='Resumo', index=False)
+
+        detailed = _generate_full_test_results(test_results)
+        detailed.to_excel(writer, sheet_name='Detalhado', index=False)
+
+
+def _generate_simple_test_results(test_results):
     result_df = pd.DataFrame(test_results)
 
     formatted_simple_result = []
@@ -87,7 +96,47 @@ def generate_simple_test_results(results_path: str, test_results):
         })
         
     df = pd.DataFrame(formatted_simple_result)
-    df.to_excel(results_path)
+    return df
+
+def _generate_full_test_results(test_results):
+    result_df = pd.DataFrame(test_results)
+
+    formatted_simple_result = []
+    for i in range(result_df.shape[0]):
+        line = result_df.iloc[i]
+        
+        test_case = line['test_case']
+        user_identity = line['user']['identity']
+        status = line['status']
+        error = line['error']
+
+        formatted_simple_result.append({
+            "mensagem de": test_case,
+            "mensagem": user_identity,
+            "mensagem tem que incluir": status,
+            "tempo máximo de resposta (segundos)": error
+        })
+
+        if line['conversation']:
+            for current_line in line['conversation']:
+                formatted_simple_result.append({
+                    "mensagem de": current_line.get('from'),
+                    "mensagem": current_line.get('content'),
+                    "mensagem tem que incluir": current_line.get('must_include'),
+                    "tempo máximo de resposta (segundos)": current_line.get('timeout_in_seconds'),
+                    "status": current_line.get('status'),
+                    "erro": current_line.get('error')
+                })
+
+        formatted_simple_result.append({
+            "mensagem de": None,
+            "mensagem": None,
+            "mensagem tem que incluir": None,
+            "tempo máximo de resposta (segundos)": None
+        })
+        
+    df = pd.DataFrame(formatted_simple_result)
+    return df
 
 
 

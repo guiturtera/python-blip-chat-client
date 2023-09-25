@@ -25,12 +25,13 @@ def main():
         except:
             test_result = {
                 "test_case": current_test['test_case'],
+                "conversation": [],
                 "error": "falha não mapeada na realização do teste"
             }
         finally:
             test_results.append(test_result)
             ws.close()
     
-    excel_parser.generate_simple_test_results(results_path, test_results)
+    excel_parser.generate_test_results(results_path, test_results)
 
 main()
