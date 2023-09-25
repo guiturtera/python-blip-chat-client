@@ -16,7 +16,7 @@ bot_id = 'teste3226'
 # appkey = 'dGVzdG1haW4zOmVhN2U1MDU2LWYwNmQtNDM0MS04Mzg1LWFiYmNmZWU4MjlkMw=='
 
 def _send_message(ws, content: dict) -> None:
-    str_content = json.dumps(content)
+    str_content = json.dumps(content, ensure_ascii=False)
     ws.send(str_content)
     
 
@@ -66,7 +66,7 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
                 res = _wait_response_message(ws, timeout_in_seconds=message['timeout_in_seconds'])
                 content = res['content']
                 if type(content) == dict:
-                    content = json.dumps(content)
+                    content = json.dumps(content, ensure_ascii=False)
 
                 print(f'  - [{datetime.now().isoformat()}] Bot: {content}')
             except TimeoutError:
@@ -87,13 +87,18 @@ def run_test(ws, user: dict, expected_conversation: list) -> dict:
             })
 
             test_result['status'] = status            
+            test_result['error'] = error            
 
             if status == 'failed':
-                return test_result
+                break
         else:
             raise Exception(f'{message["from"]} é inválido para a chave "from". Utilize "user" ou "bot"')
         
         sleep(0.5)
-    
+        
+    print(f"  - Status do teste = {test_result['status']}")
+    print(f"  - Erros do teste = {test_result['error']}")
+    print()
+
     return test_result
     

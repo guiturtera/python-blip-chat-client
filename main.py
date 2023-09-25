@@ -5,8 +5,8 @@ import tests
 import excel_parser
 import websocket
 
-websocket_uri = '<URL DO WEBHOOK DO BOT/ROUTER>'
-bot_id = '<ID DO BOT>'
+websocket_uri = 'wss://guilherme-turtera-q4uvy.ws.0mn.io/4'
+bot_id = 'teste3226'
 
 def main():
     _, tests_path, results_path = sys.argv
@@ -21,7 +21,6 @@ def main():
 
             test_result = tests.run_test(ws, new_user, current_test['tests'])
             test_result['test_case'] = current_test['test_case']
-            test_result['error'] = None
 
         except:
             test_result = {

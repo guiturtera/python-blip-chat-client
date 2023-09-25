@@ -9,8 +9,6 @@ def generate_test_cases_from_excel(excel_path: str):
     test_cases['message'] = test_cases['message'].fillna('')
     test_cases['must_include'] = test_cases['must_include'].fillna('')
 
-    print(test_cases)
-
     formatted_test_cases = []
     current_test_case = {}
 
@@ -79,11 +77,13 @@ def generate_simple_test_results(results_path: str, test_results):
         test_case = line['test_case']
         user_identity = line['user']['identity']
         status = line['status']
+        error = line['error']
 
         formatted_simple_result.append({
             "Caso de teste": test_case,
             "Id do usuário": user_identity,
-            "Status": status
+            "Status": status,
+            "Erro": error
         })
         
     df = pd.DataFrame(formatted_simple_result)

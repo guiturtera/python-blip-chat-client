@@ -4,19 +4,19 @@ import json
 
 def _send_message(ws, content: dict) -> None:
     str_content = json.dumps(content)
-    print(f'  - User: {str_content}')
+    #printf'  - User: {str_content}')
     ws.send(str_content)
     
 
 def _receive_message(ws) -> dict:
     received_message = ws.recv()
-    print(f"  - Bot: {received_message}")
+    #printf"  - Bot: {received_message}")
     return json.loads(received_message)
 
 
 def _generate_custom_user_uuid(websocket_uri: str, bot_id: str):
-    print("Criando usuário aleatório no chat:")
-    print("  Conexão de verificação se o usuário já existe:")
+    #print"Criando usuário aleatório no chat:")
+    #print"  Conexão de verificação se o usuário já existe:")
     ws = websocket.create_connection(websocket_uri)
 
     password = "dGVzdGUxMjM="
@@ -36,15 +36,15 @@ def _generate_custom_user_uuid(websocket_uri: str, bot_id: str):
         
         user_exists = res['state'] != "failed"
         
-    print(f"  UUID gerado = {random_uuid}")
-    print()
+    #printf"  UUID gerado = {random_uuid}")
+    #print)
     
     ws.close()
     
     return random_uuid
 
 def _configure_user_password(random_uuid: str, password: str, websocket_uri: str, bot_id: str) -> None:
-    print("Configurando senha para o novo usuário:")
+    #print"Configurando senha para o novo usuário:")
     ws = websocket.create_connection(websocket_uri)
 
     _send_message(ws, {'state': 'new'})
@@ -82,7 +82,7 @@ def _configure_user_password(random_uuid: str, password: str, websocket_uri: str
     _send_message(ws, {"id":f"{ws_id}","state":"finishing"})
     _receive_message(ws)
 
-    print()
+    # #print)
     ws.close()
 
 def create_new_user(websocket_uri: str, bot_id: str) -> dict:
